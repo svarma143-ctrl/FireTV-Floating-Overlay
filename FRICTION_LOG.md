@@ -182,6 +182,14 @@ Format: each entry = tool/SDK name, what we tried, what broke, how we resolved i
 - **Suggested fix**: `slice(prefixLen, endIndex === -1 ? undefined : endIndex)` in `setSrcWithCustomHeaders`, plus a console.error when the lookup misses rather than a bare return.
 - **Impact**: 20 min to pinpoint once the log line surfaced (the previous video plot armor made this one fun rather than painful). Lesson: **read the library source before trusting any RTL-level integration.**
 
+## 21. GitHub's new-repo form: invisible submit feedback and undiscoverable visibility control (via agent-driven browser)
+
+- **Tool**: GitHub repo-creation UI (`github.com/new`) driven by an agent browser (ego-browser) during submission
+- **What happened**: On the redesigned form (2026) the visibility control is a segmented button widget: DOM queries for `input[type=radio]` and aria-labelled visibility buttons return **empty**, and the "Choose visibility: Public" button exposes no `aria-pressed`/`role=radio`, so the agent could not confirm selection state before submitting. Clicking the form's real submit button then appeared to do **nothing** (URL still `github.com/new?…`) — no flash error, no inline validation — so three more click/typing fix attempts piled on, and one (keyboard auto-typing into the description field) ate spaces around punctuation (`-demos`, `Strands-AItrivia`).
+- **Resolution**: the very first submit had actually navigated (the URL check was simply read before the SPA re-render completed). Confirming by polling `document.title`/`document.body.innerText` (repo page shows "directors-cut-vega / Public") rather than trusting `page.url()` alone fixed all doubt; the description was rewritten with a clear-then-fill API to purge the type-glitched text.
+- **Suggested fix**: (a) give the segmented control real form semantics (`role=radiogroup`, `aria-pressed` or proper radios), (b) render a blocking inline validation/flash when repo creation fails, and (c) don't leave form-success indistinguishable from a no-op click.
+- **Impact**: ~25 min of agent-browser round-trips plus one mangled description before the repo was confirmed created — the classic SPA "did-it-submit?" ambiguity.
+
 1. **Vega CLI installer**: `NONINTERACTIVE=true` doesn't cover the final config-setup prompt (entry #1).
 2. **build-kepler**: exact-patch SDK pinning blocks latest-SDK users (entry #2).
 3. **VVD**: no screenshot/capture tooling; official screenshooter doesn't support virtual devices (entry #4).
@@ -194,3 +202,4 @@ Format: each entry = tool/SDK name, what we tried, what broke, how we resolved i
 10. **Media setup docs**: `[wants]` services and the babel JSX transform for w3cmedia are required but appear in a separate doc page, not the API docs users follow first (entry #13).
 11. **w3cmedia library**: mount-time `src` prop never wired to the player (silent black pane); blob-url parse drops a char when no query suffix is present (entries #18, #20).
 12. **Platform media policy**: cleartext `http` and `file://` both fail MPB with empty error messages and no docs; MSE is undocumented as the escape hatch (entry #19).
+13. **GitHub repo-creation form** (agent-driven): segmented visibility control with no form semantics, a submit-success indistinguishable from a no-op click, and keyboard typing that eats spaces around punctuation (entry #21).
