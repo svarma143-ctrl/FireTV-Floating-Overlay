@@ -1,0 +1,5 @@
+{
+  "//": "The declared app name must follow this pattern to be KRL-compatible",
+  "name": "com.directorscut.app72.main",
+  "displayName": "directorscut72"
+}

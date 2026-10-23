@@ -1,0 +1,22 @@
+{
+  "name": "@directors-cut/ai-engine",
+  "version": "1.0.0",
+  "description": "Strands Agents watch-party engine: playhead-aware trivia generation for Director's Cut Fire TV app",
+  "type": "module",
+  "main": "src/server.ts",
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "dev": "tsx watch src/server.ts"
+  },
+  "dependencies": {
+    "@fastify/static": "^10.1.7",
+    "@strands-agents/sdk": "^1.22.0",
+    "fastify": "^5.12.7",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5"
+  }
+}
