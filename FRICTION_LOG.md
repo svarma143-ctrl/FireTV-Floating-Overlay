@@ -190,6 +190,14 @@ Format: each entry = tool/SDK name, what we tried, what broke, how we resolved i
 - **Suggested fix**: (a) give the segmented control real form semantics (`role=radiogroup`, `aria-pressed` or proper radios), (b) render a blocking inline validation/flash when repo creation fails, and (c) don't leave form-success indistinguishable from a no-op click.
 - **Impact**: ~25 min of agent-browser round-trips plus one mangled description before the repo was confirmed created — the classic SPA "did-it-submit?" ambiguity.
 
+## 22. Two tsconfigs, one repo: the engine inherits the app's RN type-check and explodes in CI
+
+- **Tool**: GitHub Actions (first-round CI), root `tsconfig.json`, `engine/` workspace
+- **What happened**: Type check passed for weeks on dev machines but failed the first continuous-integration run — CI is the first place where the two halves of the repo are checked by the *same* `tsc` invocation with no local residue to mask it. The root tsconfig (React Native, `@tsconfig/react-native`) walked into `engine/src` and failed on every engine import (`fastify`, `zod`, `@strands-agents/sdk`, even `node:fs`) because the engine declares its own dependencies in `engine/` (NodeNext, `ES2022`) that root `node_modules` never contains.
+- **Resolution**: explicit `"exclude": ["engine"]` in the root tsconfig — the engine keeps its own `tsconfig` + its own `node_modules`, exactly like dev machines implicitly assumed. CI went green on the next push.
+- **Suggested fix**: workspace-aware tooling (npm/pnpm workspaces or a bundler-style `references` graph) makes the boundary explicit instead of letting each half's config accidentally absorb the other.
+- **Impact**: one failed CI run (~5 min); clean fix once the annotations named the missing modules.
+
 1. **Vega CLI installer**: `NONINTERACTIVE=true` doesn't cover the final config-setup prompt (entry #1).
 2. **build-kepler**: exact-patch SDK pinning blocks latest-SDK users (entry #2).
 3. **VVD**: no screenshot/capture tooling; official screenshooter doesn't support virtual devices (entry #4).
@@ -203,3 +211,4 @@ Format: each entry = tool/SDK name, what we tried, what broke, how we resolved i
 11. **w3cmedia library**: mount-time `src` prop never wired to the player (silent black pane); blob-url parse drops a char when no query suffix is present (entries #18, #20).
 12. **Platform media policy**: cleartext `http` and `file://` both fail MPB with empty error messages and no docs; MSE is undocumented as the escape hatch (entry #19).
 13. **GitHub repo-creation form** (agent-driven): segmented visibility control with no form semantics, a submit-success indistinguishable from a no-op click, and keyboard typing that eats spaces around punctuation (entry #21).
+14. **CI/tsconfig interaction**: a polyrepo-in-one-folder fails type check only in CI, where the app's tsconfig first walks the engine's dependency tree (entry #22).
