@@ -36,8 +36,9 @@ Built for the **Fire TV Vega hackathon** — developed entirely against the **Ve
 
 Vega OS blocks cleartext `http://` **for the native media pipeline** (MPB) — and `file://` on the VVD as well — returning a bare `MEDIA_ERR_SRC_NOT_SUPPORTED` with an empty message. Ordinary app-JS `fetch` is *not* subject to that policy, which keeps the MSE path open. This platform behavior is fully chronicled (with evidence) in [`FRICTION_LOG.md`](FRICTION_LOG.md) entries #18–#20.
 
-## Repo layout
+> **Branches**: `main` is this RN 0.72 + MSE app (the hackathon submission). The `monorepo` branch contains the earlier monorepo codebase of the same project (Vega TypeScript app, agent + docs included) — kept for history.
 
+## Repo layout
 ```
 directorscut72/
 ├── src/               # RN 0.72 Vega app (TypeScript)
