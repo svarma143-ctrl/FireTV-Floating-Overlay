@@ -5,10 +5,6 @@ Watch a movie with a panel of AI movie-critic friends: Director's Cut streams **
 
 Built for the **Fire TV Vega hackathon** — developed entirely against the **Vega Virtual Device (VVD)**.
 
-![app](docs/app-running.png)
-
-*(screenshot placeholder — replace with your own capture, or run the app per instructions below)*
-
 ---
 
 ## How it works
@@ -85,7 +81,7 @@ ffmpeg -i engine/media/big_buck_bunny_720p.mp4 -t 60 -c copy \
 # captions (fetch SRT or bake with the film)
 ```
 
-*(Big Buck Bunny © Blender Foundation — [CC BY 3.0](https://peach.blender.org)* → *all credits and applause to the Peach open-movie project.*
+*Big Buck Bunny © Blender Foundation, licensed [CC BY 3.0](https://peach.blender.org/) — all credits and applause to the Peach open-movie project.*
 
 ### 2. Start the AI engine
 
