@@ -50,60 +50,53 @@ directorscut72/
 │       ├── trivia-engine.ts # cue → question generation via Strands Agent
 │       └── mock-model.ts    # deterministic MockModel (zero-cost demo mode)
 ├── manifest.toml      # Vega package manifest (packageId + [wants] privileges)
-├── FRICTION_LOG.md    # 20 head-preserving entries of every wall we hit + suggested fixes
+├── start-engine.sh    # ⚡ one command → engine on :8788 (demo mode, no keys)
+├── run-app.sh         # ⚡ one command → build-if-needed + deploy to the VVD
+├── FRICTION_LOG.md    # 22 entries documenting every wall we hit + suggested fixes
 ├── babel.config.js    # w3cmedia-friendly JSX transform config
 └── index.js           # RN root
 ```
 
-## Running it yourself
+## Run it — setup in minutes
 
-### 0. Prereqs
-- macOS + [Vega SDK](https://amazon-vega.github.io/) (we used SDK 0.24) and the Vega Virtual Device app
+> **Zero sign-up, zero API keys.** The engine ships a deterministic **demo mode**
+> (Strands MockModel) that needs no accounts, no tokens, no AWS, no email. Only
+> the *optional* Bedrock mode reads AWS credentials — fresh clones ignore it.
+> Media + captions are **committed in the repo**, so nothing downloads and no
+> encoding step is required. If the engine isn't even running, the on-device
+> fallback trivia still keeps the party going.
+
+### 0. Prerequisites (out of our control — Amazon's)
+- macOS + [Vega SDK](https://amazon-vega.github.io/) (we used SDK 0.24) with the Vega Virtual Device app — only needed to run the *TV app*
 - Node ≥ 18
 
-### 1. Fetch media (CC-BY)
-
-The Big Buck Bunny media is **not** committed (129 MB). Download the 720p MP4 from [archive.org](https://archive.org/details/BigBuckBunny_124) into `engine/media/`, then remux to fragmented MP4 for MSE:
+### 1. Start the engine — one command, any machine
 
 ```bash
-mkdir -p engine/media
-curl -Lo engine/media/big_buck_bunny_720p.mp4 \
-  "https://archive.org/download/BigBuckBunny_124/big_buck_bunny_720p_surround.mp4"
-
-# remux (no re-encode) to fMP4 — required by the MSE path
-ffmpeg -i engine/media/big_buck_bunny_720p.mp4 -c copy \
-  -movflags frag_keyframe+empty_moov+default_base_moof engine/media/bbb_fmp4_full.mp4
-
-# short preview cut, handy for quick smoke tests
-ffmpeg -i engine/media/big_buck_bunny_720p.mp4 -t 60 -c copy \
-  -movflags frag_keyframe+empty_moov+default_base_moof engine/media/bbb_fmp4_60s.mp4
-
-# captions (fetch SRT or bake with the film)
+./start-engine.sh daemon
+# → installs engine deps (first run), starts Fastify on :8788, waits for /health
+#   health reports: {"ok":true,"provider":"strands-mock:deterministic","bedrockOptIn":false}
 ```
 
-*Big Buck Bunny © Blender Foundation, licensed [CC BY 3.0](https://peach.blender.org/) — all credits and applause to the Peach open-movie project.*
+Serves, out of the box: the demo clip (`/media/bbb_fmp4_60s.mp4`), captions
+(`/media/big-buck-bunny.srt`), trivia (`/trivia`).
 
-### 2. Start the AI engine
+### 2. Build + run the Fire TV app on the VVD — one command
 
 ```bash
-cd engine
-npm ci
-npm start          # Fastify on :8788 (health: curl localhost:8788/health)
+./run-app.sh
+# → builds the Debug .vpkg only if none exists, then deploys to the VVD
+#   (equivalent: source ~/vega/env && npx react-native build-vega --build-type Debug
+#              && vega run-app build/aarch64-debug/*.vpkg com.directorscut.app72.main -d VirtualDevice)
 ```
 
-### 3. Build + run the Fire TV app on the VVD
+The app discovers the engine at `http://10.0.2.2:8788` (the VVD's host gateway) and prefers the full 10-minute movie when present; fresh clones get the committed 60-second reel, which loops.
 
-```bash
-source ~/vega/env
-cd directorscut72
-npm ci
-npx react-native build-vega --build-type Debug
-vega run-app build/aarch64-debug/directorscut72_aarch64.vpkg com.directorscut.app72.main -d VirtualDevice
-```
+### Want the full ~10-minute movie instead of the 60-second reel?
 
-The app discovers the engine at `http://10.0.2.2:8788` (VVD's host gateway). Start watching — the debug HUD self-cleans ~15 s after first `playing`; captions tick, trivia fires every few cues, bots race.
+See [`engine/media/README.md`](engine/media/README.md) — one archive.org fetch + one ffmpeg remux (both free, no sign-up).
 
-### 4. Use the remote
+### 3. Use the remote
 - **D-pad Down/Up**: move trivia-option focus
 - **Select**: answer (correct → green reveal, bot scores update)
 - **Media play/pause** key: toggle the film
@@ -115,4 +108,4 @@ The app discovers the engine at `http://10.0.2.2:8788` (VVD's host gateway). Sta
 
 ## License
 
-MIT (see [`LICENSE`](LICENSE)). Big Buck Bunny media remains © Blender Foundation under CC BY 3.0 and is not redistributed here.
+MIT (see [`LICENSE`](LICENSE)). Big Buck Bunny media is © Blender Foundation, CC BY 3.0; the committed 60-second demo clip and caption track carry that license (see [`engine/media/README.md`](engine/media/README.md)).

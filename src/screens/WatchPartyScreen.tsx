@@ -34,7 +34,11 @@ const MEDIA_HOSTS = ['http://10.0.2.2:8788', 'http://localhost:8788'];
 // filesystem (file:// is accepted by MPB) and serve captions via the engine.
 const VIDEO_URL = 'file:///tmp/bbb.mp4';
 const FALLBACK_VIDEO_URL = 'file:///tmp/bbb.mp4';
-const MP4_FMP4_PATH = '/media/bbb_fmp4_full.mp4';
+const MP4_FMP4_PATHS = [
+  '/media/bbb_fmp4_full.mp4', // full movie — remux per engine/media/README.md
+  '/media/bbb_fmp4_60s.mp4', // 60 s clip committed in this repo (default demo)
+];
+const MP4_FMP4_PATH = MP4_FMP4_PATHS[0];
 const VIDEO_PATH = '/media/big_buck_bunny_720p.mp4';
 const CAPTIONS_PATH = '/media/big-buck-bunny.srt';
 const MOVIE_TITLE = 'Big Buck Bunny (2008)';
@@ -195,9 +199,22 @@ export const WatchPartyScreen = () => {
       } | null;
       if (!v || cancelled) return;
       try {
-        await playFmp4ViaMse(v as never, `${MEDIA_HOSTS[0]}${MP4_FMP4_PATH}`, (step, detail) =>
-          pushMarker(`${step}${detail ? ':' + detail : ''}`),
-        );
+        // Prefer the full movie; fall back to the committed 60 s clip (fresh clones
+        // ship engine/media/bbb_fmp4_60s.mp4 as the out-of-the-box demo reel).
+        const candidates = MP4_FMP4_PATHS.map(p => `${MEDIA_HOSTS[0]}${p}`);
+        let played = false;
+        for (const url of candidates) {
+          try {
+            await playFmp4ViaMse(v as never, url, (step, detail) =>
+              pushMarker(`${step}${detail ? ':' + detail : ''}`),
+            );
+            played = true;
+            break;
+          } catch (e) {
+            pushMarker(`mse-next:${(e as Error)?.message?.slice(0, 22) ?? '?'}`.slice(0, 44));
+          }
+        }
+        if (!played) throw new Error('no fmp4 source available');
       } catch (e) {
         pushMarker(`mse-throw:${(e as Error)?.message?.slice(0, 28) ?? '?'}`.slice(0, 48));
         try {
